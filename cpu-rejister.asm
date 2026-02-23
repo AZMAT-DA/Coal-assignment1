@@ -1,0 +1,273 @@
+; =============================================
+; COAL Assignment #01 - Part 2
+; CPU Registers Demonstration
+; =============================================
+
+.MODEL SMALL
+.STACK 100h
+
+.DATA
+    ; ---- Data for register operations ----
+    num1     DW  0019h           ; 25 in hex
+    num2     DW  000Fh           ; 15 in hex
+    result   DW  ?
+    
+    source   DB  'COAL', 0      ; Source string
+    dest     DB  5 DUP(0)       ; Destination buffer
+    
+    ; ---- Display Messages ----
+    msg_ax   DB '=== GENERAL PURPOSE REGISTERS ===', 0Dh, 0Ah
+             DB 'AX (Accumulator): 25 + 15 = $'
+    
+    msg_bx   DB 0Dh, 0Ah
+             DB 'BX (Base): Points to memory address$'
+    
+    msg_cx   DB 0Dh, 0Ah
+             DB 'CX (Counter): Counting 5 to 0...$'
+    
+    msg_dx   DB 0Dh, 0Ah
+             DB 'DX (Data): Printing chars ? $'
+    
+    msg_seg  DB 0Dh, 0Ah, 0Dh, 0Ah
+             DB '=== SEGMENT REGISTERS ===', 0Dh, 0Ah
+             DB 'CS = Code Segment (auto set)', 0Dh, 0Ah
+             DB 'DS = Data Segment (we set it)', 0Dh, 0Ah
+             DB 'SS = Stack Segment (auto set)', 0Dh, 0Ah
+             DB 'ES = Extra Segment (for strings)$'
+    
+    msg_ptr  DB 0Dh, 0Ah, 0Dh, 0Ah
+             DB '=== POINTER & INDEX REGISTERS ===', 0Dh, 0Ah
+             DB 'SP = Stack Pointer (top of stack)', 0Dh, 0Ah
+             DB 'BP = Base Pointer (stack frame)', 0Dh, 0Ah
+             DB 'SI = Source Index ? copied: $'
+    
+    msg_flag DB 0Dh, 0Ah, 0Dh, 0Ah
+             DB '=== FLAGS REGISTER ===', 0Dh, 0Ah
+             DB 'ZF=1 when result is zero', 0Dh, 0Ah
+             DB 'CF=1 when carry occurs', 0Dh, 0Ah
+             DB 'SF=1 when result is negative$'
+    
+    msg_done DB 0Dh, 0Ah, 0Dh, 0Ah
+             DB '=== ALL REGISTERS DEMONSTRATED ===$'
+    
+    newline  DB 0Dh, 0Ah, '$'
+
+.CODE
+
+; ============================================
+; PROCEDURE: Print AL as decimal (0-255)
+; ============================================
+PRINT_DECIMAL PROC
+    PUSH AX
+    PUSH BX
+    PUSH CX
+    PUSH DX
+    
+    XOR AH, AH          ; Clear AH
+    MOV BL, 100
+    DIV BL               ; AL = quotient, AH = remainder
+    
+    ; Print hundreds digit (skip if 0)
+    CMP AL, 0
+    JE SKIP_HUNDREDS
+    MOV DL, AL
+    ADD DL, 30h
+    MOV AH, 02h
+    INT 21h
+    
+SKIP_HUNDREDS:
+    POP DX
+    POP CX
+    POP BX
+    POP AX
+    
+    ; Simple method: just print 2 digits for our case
+    PUSH AX
+    
+    ; Tens digit
+    XOR AH, AH
+    MOV BL, 10
+    DIV BL              ; AL = tens, AH = ones
+    
+    PUSH AX             ; Save ones in AH
+    
+    MOV DL, AL
+    ADD DL, 30h
+    MOV AH, 02h
+    INT 21h             ; Print tens
+    
+    POP AX
+    MOV DL, AH
+    ADD DL, 30h
+    MOV AH, 02h
+    INT 21h             ; Print ones
+    
+    POP AX
+    RET
+PRINT_DECIMAL ENDP
+
+; ============================================
+; MAIN PROGRAM
+; ============================================
+MAIN PROC
+    ; === SEGMENT REGISTERS ===
+    ; DS - Data Segment Register
+    MOV AX, @DATA
+    MOV DS, AX           ; DS now points to our data
+    MOV ES, AX           ; ES also points to data (for strings)
+    
+    ; ============================
+    ; AX - ACCUMULATOR REGISTER
+    ; Used for: Arithmetic
+    ; ============================
+    LEA DX, msg_ax
+    MOV AH, 09h
+    INT 21h
+    
+    MOV AX, num1         ; AX = 25 (Input)
+    ADD AX, num2         ; AX = 25+15 = 40 (Process)
+    MOV result, AX       ; Store result (Output)
+    
+    ; Print result (40)
+    MOV AL, 40
+    CALL PRINT_DECIMAL   ; Shows "40"
+    
+    ; ============================
+    ; BX - BASE REGISTER
+    ; Used for: Memory addressing
+    ; ============================
+    LEA DX, msg_bx
+    MOV AH, 09h
+    INT 21h
+    
+    LEA BX, source       ; BX = address of "COAL"
+    MOV AL, [BX]         ; AL = 'C' (read from memory using BX)
+    MOV AL, [BX+1]       ; AL = 'O'
+    MOV AL, [BX+2]       ; AL = 'A'
+    MOV AL, [BX+3]       ; AL = 'L'
+    
+    ; ============================
+    ; CX - COUNTER REGISTER
+    ; Used for: Loop counting
+    ; ============================
+    LEA DX, msg_cx
+    MOV AH, 09h
+    INT 21h
+    
+    MOV CX, 5            ; CX = 5 (loop counter)
+    XOR BX, BX           ; BX = 0 (our accumulator)
+    
+LOOP_DEMO:
+    ADD BX, 10           ; BX += 10 each time
+    LOOP LOOP_DEMO       ; CX-- , if CX!=0 jump back
+    ; After loop: BX = 50, CX = 0
+    
+    ; Print "Done"
+    MOV DL, 'D'
+    MOV AH, 02h
+    INT 21h
+    MOV DL, 'o'
+    INT 21h
+    MOV DL, 'n'
+    INT 21h
+    MOV DL, 'e'
+    INT 21h
+    
+    ; ============================
+    ; DX - DATA REGISTER
+    ; Used for: I/O operations
+    ; ============================
+    LEA DX, msg_dx
+    MOV AH, 09h
+    INT 21h
+    
+    ; DX is used to output characters
+    MOV DL, 'C'
+    MOV AH, 02h
+    INT 21h
+    MOV DL, 'O'
+    INT 21h
+    MOV DL, 'A'
+    INT 21h
+    MOV DL, 'L'
+    INT 21h
+    
+    ; ============================
+    ; SEGMENT REGISTERS INFO
+    ; ============================
+    LEA DX, msg_seg
+    MOV AH, 09h
+    INT 21h
+    
+    ; ============================
+    ; SI/DI - INDEX REGISTERS
+    ; Used for: String operations
+    ; ============================
+    LEA DX, msg_ptr
+    MOV AH, 09h
+    INT 21h
+    
+    ; Copy "COAL" using SI and DI
+    LEA SI, source       ; SI = Source Index
+    LEA DI, dest         ; DI = Destination Index
+    MOV CX, 4            ; CX = 4 bytes to copy
+    CLD                  ; Direction Flag = 0 (forward)
+    REP MOVSB            ; Copy DS:SI ? ES:DI
+    
+    ; Print copied string
+    MOV DL, [dest]       ; 'C'
+    MOV AH, 02h
+    INT 21h
+    MOV DL, [dest+1]    ; 'O'
+    INT 21h
+    MOV DL, [dest+2]    ; 'A'
+    INT 21h
+    MOV DL, [dest+3]    ; 'L'
+    INT 21h
+    
+    ; ============================
+    ; SP/BP - STACK OPERATIONS
+    ; ============================
+    ; Push and Pop demonstration
+    MOV AX, 1234h
+    PUSH AX              ; SP decreases, value stored
+    MOV BP, SP           ; BP = current stack position
+    MOV BX, [BP]         ; BX = 1234h (read from stack)
+    POP AX               ; SP increases, AX = 1234h again
+    
+    ; ============================
+    ; FLAGS REGISTER
+    ; ============================
+    LEA DX, msg_flag
+    MOV AH, 09h
+    INT 21h
+    
+    ; Zero Flag demo
+    MOV AX, 5
+    SUB AX, 5            ; AX = 0 ? ZF = 1
+    
+    ; Carry Flag demo
+    MOV AL, 0FFh
+    ADD AL, 1            ; AL = 00 ? CF = 1, ZF = 1
+    
+    ; Sign Flag demo
+    MOV AL, 01h
+    SUB AL, 02h          ; AL = FFh (-1) ? SF = 1
+    
+    ; ============================
+    ; DONE
+    ; ============================
+    LEA DX, msg_done
+    MOV AH, 09h
+    INT 21h
+    
+    ; Exit program
+    MOV AH, 4Ch
+    INT 21h
+
+MAIN ENDP
+END MAIN
+
+
+
+

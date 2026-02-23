@@ -1,0 +1,29 @@
+< THE SYMBOL TABLE >  cpu-rejister.exe  --  emu8086 assembler version: 4.08 
+===================================================================================================
+Name                     	Offset    	Size      	Type      	Segment   
+===================================================================================================
+STACK                    	00000     	-5        	SEGMENT   	(ITSELF)  
+DATA                     	00010     	-5        	SEGMENT   	(ITSELF)  
+NUM1                     	00000     	2         	VAR       	data      
+NUM2                     	00002     	2         	VAR       	data      
+RESULT                   	00004     	2         	VAR       	data      
+SOURCE                   	00006     	1         	VAR       	data      
+DEST                     	0000B     	1         	VAR       	data      
+MSG_AX                   	00010     	1         	VAR       	data      
+MSG_BX                   	00050     	1         	VAR       	data      
+MSG_CX                   	00076     	1         	VAR       	data      
+MSG_DX                   	00099     	1         	VAR       	data      
+MSG_SEG                  	000B8     	1         	VAR       	data      
+MSG_PTR                  	00154     	1         	VAR       	data      
+MSG_FLAG                 	001DC     	1         	VAR       	data      
+MSG_DONE                 	00247     	1         	VAR       	data      
+NEWLINE                  	0026E     	1         	VAR       	data      
+CODE                     	00038     	-5        	SEGMENT   	(ITSELF)  
+PRINT_DECIMAL            	00000     	-1        	NEAR      	code      
+SKIP_HUNDREDS            	00017     	-1        	LABEL     	code      
+MAIN                     	00038     	-1        	NEAR      	code      
+LOOP_DEMO                	00076     	-1        	LABEL     	code      
+===================================================================================================
+[ 2/23/2026  --  1:31:35 PM ] 
+< END >
+ 
